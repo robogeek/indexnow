@@ -1,0 +1,17 @@
+{
+    "include": [ "lib/**/*" ],
+    "compilerOptions": {
+        "lib": [ "es6", "es2021", "esnext" ],
+        "target": "es2022",
+        "module": "es2022",
+        "moduleResolution": "Node",
+        "outDir": "dist",
+        "rootDir": "./lib",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": true,
+        "declarationMap": true,
+        "inlineSourceMap": true,
+        "inlineSources": true
+    }
+}
