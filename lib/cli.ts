@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Command } from 'commander';
 import Sitemapper from 'sitemapper_mos';
 import axios from 'axios';
