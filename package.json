@@ -1,11 +1,11 @@
 {
   "name": "indexnow-submit",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CLI tool to use IndexNow to notify search engines of website changes",
   "bin": {
     "indexnow-submit": "dist/cli.js"
   },
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "build": "npx tsc",
     "watch": "npx tsc -w",
