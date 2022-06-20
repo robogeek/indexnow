@@ -1,16 +1,18 @@
 {
   "name": "indexnow-submit",
-  "version": "1.0.1",
-  "description": "",
-  "main": "index.js",
+  "version": "1.0.2",
+  "description": "CLI tool to use IndexNow to notify search engines of website changes",
+  "bin": {
+    "indexnow-submit": "dist/cli.js"
+  },
   "type": "module",
   "scripts": {
     "build": "npx tsc",
     "watch": "npx tsc -w",
     "dopublish": "npm publish --access public"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [ "indexnow" ],
+  "author": "David Herron <david@davidherron.com>",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.0.0",

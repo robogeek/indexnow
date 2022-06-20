@@ -1,6 +1,8 @@
 # IndexNow-Submit -- CLI tool to help with submitting content URLs to search engines
 
-In the mists of time, back in the 1990s, we informed search engines about website content using the Ping API.  This meant making a simple HTTP call to a well known URL, giving the URL of our site, which supposedly caused the search engine to crawl our site.  But, spammers did as spammers do, and they abused that service.  The result was the Sitemap protocol, an XML file we make available on our website describing the important URLs on the website.  Today there is a new service, that's kind of a throwback to the old Ping API, called IndexNOW.  It lets us notify the search engines of changed URLs, but with an addition of an authentication scheme to make it harder to abuse.
+This tool simplifies notifying search engines of changes on our website by using the IndexNow protocol.  The promise is that by telling search engines that a specific pages or pages have changed, they can crawl just those pages and quickly update their indexes.
+
+In the mists of time, back in the 1990s, we informed search engines about website content using the Ping API.  This meant making a simple HTTP call to a well known URL, giving the URL of our site, which supposedly caused the search engine to crawl our site.  But, spammers did as spammers do, and they abused that service.  The result was the Sitemap protocol, an XML file we make available on our website describing the important URLs on the website.  Search engines consult the Sitemap file, using it to know which pages to crawl.  Today there is a new service, that's kind of a throwback to the old Ping API, called IndexNOW.  It lets us notify the search engines of changed URLs, but with an addition of an authentication scheme to make it harder to abuse.
 
 The idea is that by notifying search engines of URLs of pages that have been added, modified, or deleted, the search engine can immediately reflect the change in search results.  That could be useful, yes?  This does not mean we should stop generating Sitemap files, because the search engines will still use those files as a backup source of pages to crawl.
 
@@ -70,7 +72,11 @@ ca60c1dc-f034-11ec-8f94-d7fa725bb712
 
 Literally, that's all which is required to generate the authentication key.
 
-The next step is to install the key in a location where the search engine can retrieve the key.  The default is:  `http://YOUR-SITE-URL/KEY.txt`.  That is, in the root directory of your website, create a file named by the authentication key, with `.txt` as the file extension.  The content is simply the authentication key.
+The `indexnow-submit` package includes a shell script, `genkey.sh`, that runs this command to generate a key file suitable for use with IndexNow.
+
+By default the key file is named `KEY.txt`, and the contents are the KEY.
+
+The next step is to install that key file in a location where the search engine can retrieve the key.  The default is:  `http://YOUR-SITE-URL/KEY.txt`.  That is, in the root directory of your website, create a file named by the authentication key, with `.txt` as the file extension.  The content is simply the authentication key.
 
 The protocol allows for using a different file name, if desired.
 
