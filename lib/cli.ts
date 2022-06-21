@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import Sitemapper from 'sitemapper_mos';
 import axios from 'axios';
 import { default as FeedMe } from 'feedme';
 import { promises as fsp } from 'fs';
+import { default as SitemapXMLParser } from 'sitemap-xml-parser';
+import { parse, toSeconds } from "iso8601-duration";
+
 
 import { postIndexNowURLlist, indexNowURL } from './index.js';
 
@@ -20,17 +22,43 @@ program.command('sitemap-fetch')
     .description('Fetch the URLs in a sitemap')
     .argument('<url>', 'Sitemap URL to fetch')
     .requiredOption('-o, --output <fileName>', 'File name for output')
+    .option('-m, --max-age <maxAgeDuration>', 'ISO8601 Duration string describing oldest sitemap entry to fetch')
     .action(async (url, options, command) => {
 
         if (!url) throw new Error(`No URL given ${url}`);
         if (!options.output) throw new Error(`No output file given`);
 
-        const SITE = new Sitemapper({
-            url: url, timeout: 5000
+        const sitemapXMLParser = new SitemapXMLParser(url, {
+            delay: 3000,
+            limit: 5
         });
-        
-        const { sites } = await SITE.fetch();
-        await fsp.writeFile(options.output, JSON.stringify(sites, null, 4), 'utf-8');
+
+        const items = await sitemapXMLParser.fetch();
+
+        let items2;
+        if (options.maxAge) {
+            const now = new Date();
+
+            const maxSecs = toSeconds(parse(options.maxAge));
+            // console.log(`maxAge ${options.maxAge} maxSecs ${maxSecs}`);
+
+            items2 = items.filter(item => {
+                const lastmod = new Date(item.lastmod);
+                const age = now.getTime() - lastmod.getTime();
+                return (age / 1000) < maxSecs;
+            });
+        } else {
+            items2 = items;
+        }
+        // console.log(items);
+        // console.log(options.output);
+
+        let txt = '';
+        for (const item of items2) {
+            txt += item.loc[0] + '\n';
+        }
+
+        await fsp.writeFile(options.output, txt, 'utf-8');
     });
 
 program.command('submit-single')
@@ -92,7 +120,7 @@ program.command('submit-urls')
         //     ]
         // }
 
-        console.log(`${command.name()} ${urlFile}`, options);
+        // console.log(`${command.name()} ${urlFile}`, options);
 
         if (options.fileName && options.key) {
             throw new Error(`Only one of --key-file or --key can be specified`);
@@ -111,7 +139,7 @@ program.command('submit-urls')
             // of the array.  This skips such strings.
             return U.length > 0
         });
-        console.log(`urlList`, urlList);
+        // console.log(`urlList`, urlList);
 
         await postIndexNowURLlist(u, key, 
             options.engine, options.host, urlList);
@@ -124,9 +152,10 @@ program.command('submit-from-feed')
     .requiredOption('-h, --host <hostName>', 'Your website domain name')
     .option('-f, --key-file <fileName>', 'Name of file containing key')
     .option('-k, --key <key>', 'IndexNOW key')
+    .option('-m, --max-age <maxAgeDuration>', 'ISO8601 Duration string describing oldest sitemap entry to fetch')
     .action(async (feedURL, options, command) => {
 
-        console.log(`${command.name()} ${feedURL}`, options);
+        // console.log(`${command.name()} ${feedURL}`, options);
 
         if (options.fileName && options.key) {
             throw new Error(`Only one of --key-file or --key can be specified`);
@@ -162,10 +191,17 @@ program.command('submit-from-feed')
 
         const urlList = [];
         for (const item of feed.items) {
+            if (options.maxAge) {
+                const now = new Date();
+                const maxSecs = toSeconds(parse(options.maxAge));
+                const pubdate = new Date(item.pubdate);
+                const age = now.getTime() - pubdate.getTime();
+                if ((age / 1000) > maxSecs) continue;
+            }
             urlList.push(item.link);
         }
 
-        console.log(urlList);
+        // console.log(urlList);
 
         await postIndexNowURLlist(u, key, 
             options.engine, options.host, urlList);

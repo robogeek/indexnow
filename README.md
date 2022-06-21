@@ -51,10 +51,22 @@ One possible use case is to submit all existing pages using IndexNOW, to make su
 
 ```
 $ npx indexnow-submit sitemap-fetch https://SITE-URL/sitemap.xml \
-            --output urlList.txt
+            --output urlList.txt \
+            --max-age P10D
 ```
 
-The `--output` option is required.  The output format is JSON format for an array of strings of the URLs in the Sitemap file.  If the Sitemap has sub-Sitemaps, all those well be read, and the resulting URL list will be every URL in every sub-Sitemap.
+The `--output` option is required.  The output format is simple text of the URLs in the Sitemap file, one URL per line.  If the Sitemap has sub-Sitemaps, all those well be read, and the resulting URL list will be every URL in every sub-Sitemap.
+
+The `max-age` option is optional.  It is an ISO8601 duration specifier describing the maximum age for sitemap entries to include.  The specifier shown here says to include entries less than 10 days old.
+
+The ISO8601 duration is a standard way of specifying time periods.  From the documentation of [iso8601-duration](https://www.npmjs.com/package/iso8601-duration) we get this summary of the format:
+
+```
+PnYnMnWnDTnHnMnS - P<date>T<time>.
+(P) Years, Months, Weeks, Days (T) Hours, Minutes, Seconds.
+Example: P1Y1M1DT1H1M1.1S = One year, one month, one day, one hour, one minute, one second, and 100 milliseconds
+```
+
 
 ## A note about authenticating with IndexNOW
 
@@ -124,8 +136,10 @@ $ npx indexnow-submit submit-from-feed RSS-OR-ATOM-URL \
         --host YOUR-DOMAIN-NAME \
         --engine SEARCH-ENGINE-DOMAIN \
         --key-file FILE-NAME-FOR-KEY.txt \
-        --key KEY
+        --key KEY \
+        --max-age P10D
 ```
 
 The parameter _RSS-OR-ATOM-URL_ is the URL for your feed.  For example on a Wordpress site it will probably be `https://YOUR-DOMAIN-NAME/feed/`.
 
+The other options are as described earlier for other commands.
