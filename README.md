@@ -142,4 +142,6 @@ $ npx indexnow-submit submit-from-feed RSS-OR-ATOM-URL \
 
 The parameter _RSS-OR-ATOM-URL_ is the URL for your feed.  For example on a Wordpress site it will probably be `https://YOUR-DOMAIN-NAME/feed/`.
 
+The _RSS-OR-ATOM-URL_ can be a `file://` URL.  This can be a useful way of bypassing a caching layer, in some cases.
+
 The other options are as described earlier for other commands.

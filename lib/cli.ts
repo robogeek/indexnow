@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import axios from 'axios';
 import { default as FeedMe } from 'feedme';
 import { promises as fsp } from 'fs';
+import * as fs from 'fs';
 import { default as SitemapXMLParser } from 'sitemap-xml-parser';
 import { parse, toSeconds } from "iso8601-duration";
 
@@ -171,13 +172,23 @@ program.command('submit-from-feed')
 
         const key = await keyFromOptions(options);
 
+        const uFeed = new URL(feedURL);
+
         let feed;
         try {
-            const resFeed = await axios({
-                method: 'get',
-                url: feedURL,
-                responseType: 'stream'
-            });
+            // Support reading the RSS file either from a file or 
+            // over the Internet
+            let rssStream;
+            if (uFeed.protocol === 'file:') {
+                rssStream = fs.createReadStream(uFeed.pathname, 'utf-8');
+            } else {
+                const resFeed = await axios({
+                    method: 'get',
+                    url: feedURL,
+                    responseType: 'stream'
+                });
+                rssStream = resFeed.data;
+            }
 
             feed = await new Promise((resolve, reject) => {
                 try {
@@ -185,7 +196,7 @@ program.command('submit-from-feed')
                     parser.on('finish', () => {
                         resolve(parser.done());
                     });
-                    resFeed.data.pipe(parser);
+                    rssStream.pipe(parser);
                 } catch (err) { reject(err); }
             });
         } catch(err) {
@@ -207,7 +218,12 @@ program.command('submit-from-feed')
         // console.log(urlList);
 
         // No need to post anything
-        if (urlList.length <= 0) return;
+        if (urlList.length <= 0) {
+            console.log('No URLs to post, nothing to do')
+            return;
+        } else {
+            console.log(`Submitting these URLs to ${options.engine}`, urlList);
+        }
 
         await postIndexNowURLlist(u, key, 
             options.engine, options.host, urlList);
