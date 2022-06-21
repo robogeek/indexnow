@@ -141,6 +141,9 @@ program.command('submit-urls')
         });
         // console.log(`urlList`, urlList);
 
+        // No need to post anything
+        if (urlList.length <= 0) return;
+
         await postIndexNowURLlist(u, key, 
             options.engine, options.host, urlList);
     });
@@ -202,6 +205,9 @@ program.command('submit-from-feed')
         }
 
         // console.log(urlList);
+
+        // No need to post anything
+        if (urlList.length <= 0) return;
 
         await postIndexNowURLlist(u, key, 
             options.engine, options.host, urlList);
