@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 import Sitemapper from 'sitemapper_mos';
 import axios from 'axios';
-import FeedMe from 'feedme';
+import { default as FeedMe } from 'feedme';
 import { promises as fsp } from 'fs';
 
 import { postIndexNowURLlist, indexNowURL } from './index.js';
@@ -187,5 +187,7 @@ async function keyFromOptions(options) {
         throw new Error(`No key supplied`);
     }
 
-    return key;
+    // Using genkey.sh there are newlines at the end
+    // of the file.  Newlines cause failure.
+    return key.replace(/\n+$/, '');
 }

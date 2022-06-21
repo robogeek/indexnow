@@ -1,11 +1,11 @@
 {
   "name": "indexnow-submit",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "CLI tool to use IndexNow to notify search engines of website changes",
   "bin": {
     "indexnow-submit": "dist/cli.js"
   },
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "build": "npx tsc",
     "watch": "npx tsc -w",
@@ -13,6 +13,7 @@
   },
   "keywords": [ "indexnow" ],
   "author": "David Herron <david@davidherron.com>",
+  "homepage": "https://github.com/robogeek/indexnow",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.0.0",
