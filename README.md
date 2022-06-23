@@ -158,17 +158,14 @@ import * as IndexNow from 'indexnow-submit';
 
 Functions are as follows.
 
-**postIndexNowURLlist** -- Handles the POST operation to submit a list of URLs to an IndexNow server.
+**postURLlist** -- Handles the POST operation to submit a list of URLs to an IndexNow server.
 
 ```js
-async function postIndexNowURLlist(
-    u: URL, key: string,
+async function postURLlist(
     engine: string, host: string,
-    urlList: Array<string>
+    key: string, urlList: Array<string>
 ): Promise<void>
 ```
-
-The parameter `u` is the string representation of the IndexNow endpoint at a specific search engine.  
 
 The `key` parameter is your chosen authentication key.  
 
@@ -230,4 +227,18 @@ type SitemapEntry = {
     image?: Array<string>
 };
 ```
+
+**fetchURLsFromRSSAtom** -- Fetch the URLs from either an RSS or Atom feed.
+
+```js
+async function fetchURLsFromRSSAtom(
+    feedURL: string, maxAge: string
+): Promise<Array<string>>
+```
+
+The `feedURL` parameter is the URL for the feed.  This URL is allowed to be a `file`, `http` or `https` URL.
+
+The `maxAge` parameter is optional, and is an ISO8601 time duration.  The purpose is the same as discussed above.
+
+The return value is an array of the URLs for selected content.
 

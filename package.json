@@ -1,6 +1,6 @@
 {
   "name": "indexnow-submit",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "CLI tool to use IndexNow to notify search engines of website changes",
   "bin": {
     "indexnow-submit": "dist/cli.js"

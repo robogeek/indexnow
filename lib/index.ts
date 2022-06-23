@@ -1,24 +1,42 @@
 
+import { promises as fsp } from 'fs';
+import * as fs from 'fs';
 import axios from 'axios';
 import { default as SitemapXMLParser } from 'sitemap-xml-parser';
 import { parse, toSeconds } from "iso8601-duration";
+import { default as FeedMe } from 'feedme';
 
 /**
  * Use Axios to post a URL list via IndexNow to the given search engine.
  * 
- * @param u URL for the Search Engine IndexNow endpoint
  * @param key The authentication key to use for IndexNow
  * @param engine The domain name for the search engine
  * @param host The domain name for your website
  * @param urlList The list of URLs to post to IndexNow
  */
-export async function postIndexNowURLlist(
-    u: URL, key: string,
+export async function postURLlist(
     engine: string, host: string,
-    urlList: Array<string>
+    key: string,  urlList: Array<string>
 ): Promise<void> {
     
+    const u = indexNowURL(engine);
+
     try {
+
+        // POST /indexnow HTTP/1.1
+        // Content-Type: application/json; charset=utf-8
+        // Host: <searchengine>
+        // {
+        //     "host": "www.example.com",
+        //     "key": "aaa6c957e47d498589ee7a33281997cb",
+        //     "keyLocation": "https://www.example.com/myIndexNowKey63638.txt",
+        //     "urlList": [
+        //         "https://www.example.com/url1",
+        //         "https://www.example.com/folder/url2",
+        //         "https://www.example.com/url3"
+        //     ]
+        // }
+
         const response = await axios({
             method: 'post',
             url: u.toString(),
@@ -144,4 +162,62 @@ export async function fetchURLsFromSitemap(
         return items;
     }
     
-} 
+}
+
+/**
+ * Retrieve URLs from the RSS or Atom file, returning as
+ * an array.
+ * 
+ * @param feedURL  The URL for the RSS or Atom feed
+ * @param maxAge An ISO8601 duration string as discussed above
+ * @returns 
+ */
+export async function fetchURLsFromRSSAtom(
+    feedURL: string, maxAge: string
+): Promise<Array<string>> {
+
+    const uFeed = new URL(feedURL);
+
+    let feed;
+    try {
+        // Support reading the RSS file either from a file or 
+        // over the Internet
+        let rssStream;
+        if (uFeed.protocol === 'file:') {
+            rssStream = fs.createReadStream(uFeed.pathname, 'utf-8');
+        } else {
+            const resFeed = await axios({
+                method: 'get',
+                url: feedURL,
+                responseType: 'stream'
+            });
+            rssStream = resFeed.data;
+        }
+
+        feed = await new Promise((resolve, reject) => {
+            try {
+                let parser = new FeedMe(true);
+                parser.on('finish', () => {
+                    resolve(parser.done());
+                });
+                rssStream.pipe(parser);
+            } catch (err) { reject(err); }
+        });
+    } catch(err) {
+        throw new Error(`Fetching feed ${feedURL} failed because ${err.message}`);
+    }
+
+    const urlList = [];
+    for (const item of feed.items) {
+        if (maxAge) {
+            const now = new Date();
+            const maxSecs = toSeconds(parse(maxAge));
+            const pubdate = new Date(item.pubdate);
+            const age = now.getTime() - pubdate.getTime();
+            if ((age / 1000) > maxSecs) continue;
+        }
+        urlList.push(item.link);
+    }
+
+    return urlList;
+}

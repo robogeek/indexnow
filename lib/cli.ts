@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import axios from 'axios';
-import { default as FeedMe } from 'feedme';
 import { promises as fsp } from 'fs';
-import * as fs from 'fs';
-import { parse, toSeconds } from "iso8601-duration";
-
 
 import {
-    postIndexNowURLlist, indexNowURL, fetchURLsFromSitemap, submitSingleURL
+    postURLlist, indexNowURL, fetchURLsFromSitemap, submitSingleURL,
+    fetchURLsFromRSSAtom
 } from './index.js';
 
 const program = new Command();
@@ -32,9 +28,6 @@ program.command('sitemap-fetch')
 
         // console.log(`${command.name()} ${url} ${options.maxAge}`);
 
-        // I tried replacing the following with this line.
-        // For some reason the SitemapXMLParser call fails
-        // 
         const items = await fetchURLsFromSitemap(url, options.maxAge);
 
         let txt = '';
@@ -118,8 +111,7 @@ program.command('submit-urls')
         // No need to post anything
         if (urlList.length <= 0) return;
 
-        await postIndexNowURLlist(u, key, 
-            options.engine, options.host, urlList);
+        await postURLlist(options.engine, options.host, key, urlList);
     });
 
 program.command('submit-from-feed')
@@ -145,61 +137,18 @@ program.command('submit-from-feed')
 
         const key = await keyFromOptions(options);
 
-        const uFeed = new URL(feedURL);
-
-        let feed;
-        try {
-            // Support reading the RSS file either from a file or 
-            // over the Internet
-            let rssStream;
-            if (uFeed.protocol === 'file:') {
-                rssStream = fs.createReadStream(uFeed.pathname, 'utf-8');
-            } else {
-                const resFeed = await axios({
-                    method: 'get',
-                    url: feedURL,
-                    responseType: 'stream'
-                });
-                rssStream = resFeed.data;
-            }
-
-            feed = await new Promise((resolve, reject) => {
-                try {
-                    let parser = new FeedMe(true);
-                    parser.on('finish', () => {
-                        resolve(parser.done());
-                    });
-                    rssStream.pipe(parser);
-                } catch (err) { reject(err); }
-            });
-        } catch(err) {
-            throw new Error(`Fetching feed ${feedURL} failed because ${err.message}`);
-        }
-
-        const urlList = [];
-        for (const item of feed.items) {
-            if (options.maxAge) {
-                const now = new Date();
-                const maxSecs = toSeconds(parse(options.maxAge));
-                const pubdate = new Date(item.pubdate);
-                const age = now.getTime() - pubdate.getTime();
-                if ((age / 1000) > maxSecs) continue;
-            }
-            urlList.push(item.link);
-        }
-
+        const urlList = await fetchURLsFromRSSAtom(feedURL, options.maxAge);
         // console.log(urlList);
 
         // No need to post anything
         if (urlList.length <= 0) {
-            console.log('No URLs to post, nothing to do')
+            console.log('No URLs to post, nothing to do');
             return;
         } else {
             console.log(`Submitting these URLs to ${options.engine}`, urlList);
         }
 
-        await postIndexNowURLlist(u, key, 
-            options.engine, options.host, urlList);
+        await postURLlist(options.engine, options.host, key, urlList);
     });
 
 // Generate key into directory
