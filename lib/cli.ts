@@ -5,6 +5,7 @@ import axios from 'axios';
 import { default as FeedMe } from 'feedme';
 import { promises as fsp } from 'fs';
 import * as fs from 'fs';
+import { fetchURLsFromSitemap } from './index.js';
 import { default as SitemapXMLParser } from 'sitemap-xml-parser';
 import { parse, toSeconds } from "iso8601-duration";
 
@@ -29,35 +30,18 @@ program.command('sitemap-fetch')
         if (!url) throw new Error(`No URL given ${url}`);
         if (!options.output) throw new Error(`No output file given`);
 
-        const sitemapXMLParser = new SitemapXMLParser(url, {
-            delay: 3000,
-            limit: 5
-        });
+        // console.log(`${command.name()} ${url} ${options.maxAge}`);
 
-        const items = await sitemapXMLParser.fetch();
-
-        let items2;
-        if (options.maxAge) {
-            const now = new Date();
-
-            const maxSecs = toSeconds(parse(options.maxAge));
-            // console.log(`maxAge ${options.maxAge} maxSecs ${maxSecs}`);
-
-            items2 = items.filter(item => {
-                const lastmod = new Date(item.lastmod);
-                const age = now.getTime() - lastmod.getTime();
-                return (age / 1000) < maxSecs;
-            });
-        } else {
-            items2 = items;
-        }
-        // console.log(items);
-        // console.log(options.output);
+        // I tried replacing the following with this line.
+        // For some reason the SitemapXMLParser call fails
+        // 
+        const items = await fetchURLsFromSitemap(url, options.maxAge);
 
         let txt = '';
-        for (const item of items2) {
+        for (const item of items) {
             txt += item.loc[0] + '\n';
         }
+        // console.log(`topost`, txt);
 
         await fsp.writeFile(options.output, txt, 'utf-8');
     });

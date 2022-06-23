@@ -145,3 +145,72 @@ The parameter _RSS-OR-ATOM-URL_ is the URL for your feed.  For example on a Word
 The _RSS-OR-ATOM-URL_ can be a `file://` URL.  This can be a useful way of bypassing a caching layer, in some cases.
 
 The other options are as described earlier for other commands.
+
+## API
+
+The package also supports a callable API that the commands are based on.
+
+USAGE: 
+
+```js
+import * as IndexNow from 'indexnow-submit';
+```
+
+Functions are as follows.
+
+**postIndexNowURLlist** -- Handles the POST operation to submit a list of URLs to an IndexNow server.
+
+```js
+async function postIndexNowURLlist(
+    u: URL, key: string,
+    engine: string, host: string,
+    urlList: Array<string>
+): Promise<void>
+```
+
+The parameter `u` is the string representation of the IndexNow endpoint at a specific search engine.  
+
+The `key` parameter is your chosen authentication key.  
+
+The `engine` parameter is the domain name of the search engine.
+
+The `host` parameter is the domain name of your website.
+
+The `urlList` parameter is an array of URLs to post.
+
+So long as this executes without error, it will have succeeded.
+
+**indexNowURL** -- Generates a URL object for the IndexNow endpoint matching the domain name.
+
+```js
+function indexNowURL(engine: string): URL
+```
+
+The `engine` parameter is the domain name of the search engine.
+
+The return value is a URL object for `https://ENGINE/indexnow`
+
+**fetchURLsFromSitemap** -- Retrieve an array of URL descriptors from the named sitemap.
+
+```js
+async function fetchURLsFromSitemap(
+    u: string, maxAge?: string
+) : Promise<Array<SitemapEntry>>
+```
+
+The `u` parameter is the string representation of the URL for a Sitemap.  This URL must be for a web address, e.g. with the `http` or `https` protocol.  It was tested to not work with a `file` URL.
+
+The `maxAge` parameter is optional, and is an ISO8601 time duration.  The purpose is the same as discussed above.
+
+The return value is an array of descriptors that are based on Sitemap entries.  The type is described as follows:
+
+```js
+type SitemapEntry = {
+    loc: Array<string>,
+    lastmod: Array<string>,
+    changefreq?: Array<string>,
+    priority?: Array<string>,
+    image?: Array<string>
+};
+```
+
