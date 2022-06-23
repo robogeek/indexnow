@@ -180,6 +180,23 @@ The `urlList` parameter is an array of URLs to post.
 
 So long as this executes without error, it will have succeeded.
 
+**submitSingleURL** -- Submit a single URL to the IndexNow server.
+
+```js
+async function submitSingleURL(
+    engine: string, url: string, key: string
+): Promise<void>
+```
+
+The `url` parameter is the URL to submit.
+
+The `engine` parameter is the domain name of the search engine.
+
+The `key` parameter is your chosen authentication key.  
+
+So long as this executes without error, it will have succeeded.
+
+
 **indexNowURL** -- Generates a URL object for the IndexNow endpoint matching the domain name.
 
 ```js

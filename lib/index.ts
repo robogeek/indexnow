@@ -38,6 +38,32 @@ export async function postIndexNowURLlist(
 }
 
 /**
+ * Submit a single URL to an IndexNow service.  If this executes with
+ * no error it was successful.  Otherwise a suitable error is thrown.
+ * 
+ * @param engine The domain name of the search engine
+ * @param url The URL to submit
+ * @param key The IndexNow key to use
+ */
+export async function submitSingleURL(
+    engine: string, url: string, key: string
+): Promise<void> {
+
+    // https://<searchengine>/indexnow?url=url-changed&key=your-key
+
+    const u = indexNowURL(engine);
+
+    u.searchParams.append('url', url);
+    u.searchParams.append('key', key);
+
+    console.log(`Submitting ${u.toString()}`);
+
+    const response = await axios.get(u.toString());
+
+    console.log(`Submitted to ${engine} ${url} status ${response.status}`);
+}
+
+/**
  * Generate a URL obect for the IndexNow service on the given 
  * search engine. 
  * @param engine The domain name for the search engine

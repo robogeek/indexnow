@@ -5,12 +5,12 @@ import axios from 'axios';
 import { default as FeedMe } from 'feedme';
 import { promises as fsp } from 'fs';
 import * as fs from 'fs';
-import { fetchURLsFromSitemap } from './index.js';
-import { default as SitemapXMLParser } from 'sitemap-xml-parser';
 import { parse, toSeconds } from "iso8601-duration";
 
 
-import { postIndexNowURLlist, indexNowURL } from './index.js';
+import {
+    postIndexNowURLlist, indexNowURL, fetchURLsFromSitemap, submitSingleURL
+} from './index.js';
 
 const program = new Command();
 
@@ -65,21 +65,10 @@ program.command('submit-single')
 
         // https://<searchengine>/indexnow?url=url-changed&key=your-key
 
-        const u = indexNowURL(options.engine);
-        u.searchParams.append('url', url);
-        if (options.keyFile) {
-            const key = await fsp.readFile(options.keyFile, 'utf-8');
-            u.searchParams.append('key', key);
-        } else if (options.key) {
-            u.searchParams.append('key', options.key);
-        } else {
-            throw new Error(`No key supplied`);
-        }
+        const key = await keyFromOptions(options);
 
-        console.log(`Submitting ${u.toString()}`);
+        await submitSingleURL(options.engine, url, key);
 
-        const response = await axios.get(u.toString());
-        console.log(`Submitted to ${options.engine} ${url} status ${response.status}`);
     });
 
 program.command('submit-urls')
