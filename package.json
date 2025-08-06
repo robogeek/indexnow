@@ -1,6 +1,6 @@
 {
   "name": "indexnow-submit",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "CLI tool to use IndexNow to notify search engines of website changes",
   "bin": {
     "indexnow-submit": "dist/cli.js"
@@ -20,13 +20,14 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^18.0.0",
+    "@types/got": "^9.6.12",
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "axios": "^0.27.2",
     "commander": "^9.3.0",
     "feedme": "^2.0.2",
+    "got": "^14.4.7",
     "iso8601-duration": "^2.1.1",
-    "sitemap-xml-parser": "^0.0.2"
+    "sitemapper": "^3.2.20"
   }
 }

@@ -1,8 +1,9 @@
 
 import { promises as fsp } from 'fs';
 import * as fs from 'fs';
-import axios from 'axios';
-import { default as SitemapXMLParser } from 'sitemap-xml-parser';
+import got, { Response, GotOptions } from 'got';
+import Sitemapper from 'sitemapper';
+// import { default as SitemapXMLParser } from 'sitemap-xml-parser';
 import { parse, toSeconds } from "iso8601-duration";
 import { default as FeedMe } from 'feedme';
 
@@ -37,19 +38,17 @@ export async function postURLlist(
         //     ]
         // }
 
-        const response = await axios({
-            method: 'post',
-            url: u.toString(),
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8'
-            },
-            data: {
+        const response: Response<any> = await got.post(u.toString(), {
+            // headers: {
+            //     'Content-Type': 'application/json; charset=utf-8'
+            // },
+            json: {
                 host: host,
                 key: key,
                 urlList: urlList
             }
-        });
-        console.log(`Submitted ${urlList.length} URL's to ${engine} status ${response.status}`);
+        } as GotOptions<any>);
+        console.log(`Submitted ${urlList.length} URL's to ${engine} status ${response.statusCode}`);
     } catch (err) {
         console.error(err);
     }
@@ -76,9 +75,9 @@ export async function submitSingleURL(
 
     console.log(`Submitting ${u.toString()}`);
 
-    const response = await axios.get(u.toString());
+    const response = await got.get(u.toString());
 
-    console.log(`Submitted to ${engine} ${url} status ${response.status}`);
+    console.log(`Submitted to ${engine} ${url} status ${response.statusCode}`);
 }
 
 /**
@@ -106,7 +105,7 @@ export type SitemapEntry = {
     /**
      * Last modification date(s)
      */
-    lastmod: Array<string>,
+    lastmod?: Array<string>,
 
     /**
      * How often to expect this item to change
@@ -138,29 +137,54 @@ export async function fetchURLsFromSitemap(
 
     // console.log(`fetchURLsFromSitemap ${u} ${maxAge}`);
 
-    const sitemapXMLParser = new SitemapXMLParser(u, {
-        delay: 3000,
-        limit: 5
-    });
+    const sitemapXMLParser = new Sitemapper({
+        url: u,
+        timeout: 15000, // 15 seconds
+        fields: {
+            loc: true,
+            lastmod: true,
+            changefreq: true,
+            priority: true,
+        }
+      });
+    // const sitemapXMLParser = new SitemapXMLParser(u, {
+    //     delay: 3000,
+    //     limit: 5
+    // });
 
     // console.log(`fetching`);
 
     const items = await sitemapXMLParser.fetch();
-
-    if (maxAge) {
-        const now = new Date();
-
-        const maxSecs = toSeconds(parse(maxAge));
-        // console.log(`maxAge ${maxAge} maxSecs ${maxSecs}`);
-
-        return items.filter(item => {
-            const lastmod = new Date(item.lastmod);
-            const age = now.getTime() - lastmod.getTime();
-            return (age / 1000) < maxSecs;
-        });
-    } else {
-        return items;
+    const ret = new Array<SitemapEntry>();
+    for (const item of items.sites) {
+        if (typeof item === 'string') {
+            ret.push({ loc: [ item ] });
+        } else if (typeof item === 'object') {
+            const anyitem: any = <any>item;
+            if (typeof anyitem.loc === 'string') {
+                anyitem.loc = [ anyitem.loc ];
+            }
+            ret.push(anyitem);
+        }
     }
+    return ret;
+    // return items;
+
+    // if (maxAge) {
+    //     const now = new Date();
+
+    //     const maxSecs = toSeconds(parse(maxAge));
+    //     // console.log(`maxAge ${maxAge} maxSecs ${maxSecs}`);
+
+    //     return items.sites;
+    //     // .filter(item => {
+    //     //     const lastmod = new Date(item.lastmod);
+    //     //     const age = now.getTime() - lastmod.getTime();
+    //     //     return (age / 1000) < maxSecs;
+    //     // });
+    // } else {
+    //     return items.sites;
+    // }
     
 }
 
@@ -186,12 +210,8 @@ export async function fetchURLsFromRSSAtom(
         if (uFeed.protocol === 'file:') {
             rssStream = fs.createReadStream(uFeed.pathname, 'utf-8');
         } else {
-            const resFeed = await axios({
-                method: 'get',
-                url: feedURL,
-                responseType: 'stream'
-            });
-            rssStream = resFeed.data;
+            const resFeed = await got.stream(feedURL);
+            rssStream = resFeed;
         }
 
         feed = await new Promise((resolve, reject) => {

@@ -2,8 +2,8 @@
     "include": [ "lib/**/*" ],
     "compilerOptions": {
         "lib": [ "es6", "es2021", "esnext" ],
-        "target": "es2022",
-        "module": "es2022",
+        "target": "ESNext",
+        "module": "ESNext",
         "moduleResolution": "Node",
         "outDir": "dist",
         "rootDir": "./lib",
@@ -12,6 +12,7 @@
         "declaration": true,
         "declarationMap": true,
         "inlineSourceMap": true,
-        "inlineSources": true
+        "inlineSources": true,
+        "esModuleInterop": true
     }
 }

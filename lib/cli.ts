@@ -30,6 +30,7 @@ program.command('sitemap-fetch')
 
         const items = await fetchURLsFromSitemap(url, options.maxAge);
 
+        // console.log(items);
         let txt = '';
         for (const item of items) {
             txt += item.loc[0] + '\n';
